@@ -115,5 +115,162 @@ namespace TOIR.Core
 
         [Display(Name = "Ось 2 по вертикали", GroupName = "Местоположение")]
         public string? Os_2_po_vertikali { get; set; }
+
+        [Display(Name = "№ проекта", GroupName = "Местоположение")]
+        public string? Nomer_proekta { get; set; }
+
+        [Display(Name = "Позиция по проекту", GroupName = "Местоположение")]
+        public string? Poziciya_po_proekty { get; set; }
+
+        [Display(Name = "Пролет", GroupName = "Местоположение")]
+        public string? Prolet { get; set; }
+
+        [Display(Name = "Этаж", GroupName = "Местоположение")]
+        public string? Etazh { get; set; }
+
+        // === Ответственные ===
+        [Display(Name = "Цех, ответственный за исправное техническое состояние", GroupName = "Ответственные")]
+        public string? Ceh_otvetstvenniy { get; set; }
+
+        [Display(Name = "Служба главного специалиста, ответственная за исправное состояние", GroupName = "Ответственные")]
+        public string? Sluzhba_glavnogo_specialista { get; set; }
+
+        [Display(Name = "Лицо, ответственное за исправное состояние", GroupName = "Ответственные")]
+        public string? Litso_otvetstvennoe_ispravnoe { get; set; }
+
+        [Display(Name = "Лицо, ответственное за безопасную эксплуатацию", GroupName = "Ответственные")]
+        public string? Litso_otvetstvennoe_bezopasnoe { get; set; }
+
+        [Display(Name = "Материально-ответственное лицо", GroupName = "Ответственные")]
+        public string? Materialno_otvetstvennoe_litso { get; set; }
+
+        // === Планирование ===
+        [Display(Name = "Периодичность ТО мех (раз в Х месяцев)", GroupName = "Планирование")]
+        public double? Periodichnost_TO_meh { get; set; }
+
+        [Display(Name = "Периодичность ТР мех (раз в Х месяцев)", GroupName = "Планирование")]
+        public double? Periodichnost_TR_meh { get; set; }
+
+        [Display(Name = "Периодичность КР мех (раз в Х месяцев)", GroupName = "Планирование")]
+        public double? Periodichnost_KR_meh { get; set; }
+
+        [Display(Name = "Периодичность ТО эл", GroupName = "Планирование")]
+        public double? Periodichnost_TO_el { get; set; }
+
+        [Display(Name = "Периодичность ТР эл", GroupName = "Планирование")]
+        public double? Periodichnost_TR_el { get; set; }
+
+        [Display(Name = "Периодичность КР эл", GroupName = "Планирование")]
+        public double? Periodichnost_KR_el { get; set; }
+
+        [Display(Name = "Периодичность ТО кип", GroupName = "Планирование")]
+        public double? Periodichnost_TO_kip { get; set; }
+
+        [Display(Name = "Периодичность ТР кип", GroupName = "Планирование")]
+        public double? Periodichnost_TR_kip { get; set; }
+
+        [Display(Name = "Периодичность ТО АСУ", GroupName = "Планирование")]
+        public double? Periodichnost_TO_ASU { get; set; }
+
+        [Display(Name = "Исполнитель ТО мех", GroupName = "Планирование")]
+        public string? Ispolnitel_TO_meh { get; set; }
+
+        [Display(Name = "Исполнитель ТР мех", GroupName = "Планирование")]
+        public string? Ispolnitel_TR_meh { get; set; }
+
+        [Display(Name = "Исполнитель КР мех", GroupName = "Планирование")]
+        public string? Ispolnitel_KR_meh { get; set; }
+
+        [Display(Name = "Исполнитель ТО эл", GroupName = "Планирование")]
+        public string? Ispolnitel_TO_el { get; set; }
+
+        [Display(Name = "Исполнитель ТР эл", GroupName = "Планирование")]
+        public string? Ispolnitel_TR_el { get; set; }
+
+        [Display(Name = "Исполнитель КР эл", GroupName = "Планирование")]
+        public string? Ispolnitel_KR_el { get; set; }
+
+        [Display(Name = "Исполнитель ТО кип", GroupName = "Планирование")]
+        public string? Ispolnitel_TO_kip { get; set; }
+
+        [Display(Name = "Исполнитель ТР кип", GroupName = "Планирование")]
+        public string? Ispolnitel_TR_kip { get; set; }
+
+        [Display(Name = "Исполнитель ТО АСУ", GroupName = "Планирование")]
+        public string? Ispolnitel_TO_ASU { get; set; }
+
+        [Display(Name = "Ремонтосложность механическая часть", GroupName = "Планирование")]
+        public double? Remontoslozhnost_meh { get; set; }
+
+        [Display(Name = "Ремонтосложность электрическая часть", GroupName = "Планирование")]
+        public double? Remontoslozhnost_el { get; set; }
+
+        [Display(Name = "Ремонтосложность КИПиА", GroupName = "Планирование")]
+        public double? Remontoslozhnost_kip { get; set; }
+
+        [Display(Name = "Ремонтосложность АСУТП", GroupName = "Планирование")]
+        public double? Remontoslozhnost_ASUTP { get; set; }
+
+        [Display(Name = "Дата начала запуска цикла ремонтов", GroupName = "Планирование")]
+        public DateTime? Data_nachala_cikla_remontov { get; set; }
+
+        [Display(Name = "Сменность", GroupName = "Планирование")]
+        public string? Smennost { get; set; }
+
+        [Display(Name = "Коэффициент условий труда", GroupName = "Планирование")]
+        public double? Koefficient_usloviy_truda { get; set; }
+
+        [Display(Name = "Дополнительный ремонтный коэффициент ДРК", GroupName = "Планирование")]
+        public double? Dop_remontniy_koefficient_DRK { get; set; }
+
+        // === Поверка ===
+        [Display(Name = "Дата последней поверки", GroupName = "Поверка")]
+        public DateTime? Data_posledney_poverki { get; set; }
+
+        [Display(Name = "Годен до", GroupName = "Поверка")]
+        public DateTime? Goden_do { get; set; }
+
+        // === Надзор ===
+        [Display(Name = "Является техническим устройством на ОПО", GroupName = "Надзор")]
+        public bool Yavlyaetsya_tehnicheskim_ustroystvom_OPO { get; set; }
+
+        [Display(Name = "Является техническим устройством на ХОПО", GroupName = "Надзор")]
+        public bool Yavlyaetsya_tehnicheskim_ustroystvom_HOPO { get; set; }
+
+        [Display(Name = "Является объектом, важным для безопасности", GroupName = "Надзор")]
+        public bool Yavlyaetsya_obektom_vazhnim_bezopasnosti { get; set; }
+
+        [Display(Name = "Является ядерной установкой", GroupName = "Надзор")]
+        public bool Yavlyaetsya_yadernoy_ustanovkoy { get; set; }
+
+        [Display(Name = "Нормативный документ для класса безопасности", GroupName = "Надзор")]
+        public string? Normativniy_dokument_klassa_bezopasnosti { get; set; }
+
+        [Display(Name = "Класс безопасности", GroupName = "Надзор")]
+        public int? Klass_bezopasnosti { get; set; }
+
+        [Display(Name = "Классификационное обозначение", GroupName = "Надзор")]
+        public string? Klassifikacionnoe_oboznachenie { get; set; }
+
+        [Display(Name = "Является объектом, влияющим на охрану окружающей среды", GroupName = "Надзор")]
+        public bool Yavlyaetsya_obektom_ohrany_okruzhayuschey_sredy { get; set; }
+
+        [Display(Name = "Является объектом противопожарной защиты", GroupName = "Надзор")]
+        public bool Yavlyaetsya_obektom_protivopozharnoy_zaschity { get; set; }
+
+        [Display(Name = "Надзорный орган (внешний)", GroupName = "Надзор")]
+        public string? Nadzorniy_organ_vneshniy { get; set; }
+
+        [Display(Name = "Надзорный орган (внутренний)", GroupName = "Надзор")]
+        public string? Nadzorniy_organ_vnutrenniy { get; set; }
+
+        [Display(Name = "Регистрационный номер", GroupName = "Надзор")]
+        public string? Registracionniy_nomer { get; set; }
+
+        [Display(Name = "Срок службы с даты изготовления (лет)", GroupName = "Надзор")]
+        public int? Srok_sluzhby_let { get; set; }
+
+        [Display(Name = "Дата истечения срока службы", GroupName = "Надзор")]
+        public DateTime? Data_istecheniya_sroka_sluzhby { get; set; }
     }
 }
