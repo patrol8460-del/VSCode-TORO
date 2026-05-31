@@ -261,7 +261,7 @@ async function loadEquipment() {
 }
 
 // ===== EQUIPMENT DETAIL =====
-const equipTabs = ["Основное", "Местоположение", "Ответственные", "Планирование", "Поверка", "Надзор"];
+const equipTabs = ["Основное", "Местоположение", "Ответственные", "Планирование", "Поверка", "Надзор", "Замеряемые параметры"];
 
 const equipFields = {
   "Основное": [
@@ -437,6 +437,26 @@ function renderEquipmentDetail() {
     return '<div class="detail-column">'+colHtml+'</div>';
   }).join("");
 
+  if (currentEquipTab === "Замеряемые параметры") {
+    content.innerHTML = `
+      <button class="detail-back-btn" onclick="renderEquipment(document.getElementById('mainContent'))">
+        ← Назад к списку
+      </button>
+      <div class="detail-header">
+        <h2>Оборудование #${currentEquipId}</h2>
+        <span class="detail-subtitle">${currentEquipData.tip_model || currentEquipData.naimenovanie_oborudovaniya || ""}</span>
+      </div>
+      <div class="detail-tabs">
+        ${tabButtons}
+      </div>
+      <div id="measurableParamsContainer">
+        <div class="meas-loading">Загрузка параметров...</div>
+      </div>
+    `;
+    loadMeasurableParams();
+    return;
+  }
+
   content.innerHTML = `
     <button class="detail-back-btn" onclick="renderEquipment(document.getElementById('mainContent'))">
       ← Назад к списку
@@ -461,6 +481,604 @@ function renderEquipmentDetail() {
 function switchEquipTab(tab) {
   currentEquipTab = tab;
   renderEquipmentDetail();
+}
+
+// ===== MEASURABLE PARAMETERS =====
+
+let measurableParams = [];
+
+const okeiUnits = [
+  { code: "006", name: "м" },
+  { code: "008", name: "мм" },
+  { code: "012", name: "дм" },
+  { code: "018", name: "км" },
+  { code: "020", name: "см" },
+  { code: "025", name: "мкм" },
+  { code: "027", name: "нм" },
+  { code: "039", name: "дюйм" },
+  { code: "050", name: "м²" },
+  { code: "055", name: "см²" },
+  { code: "060", name: "мм²" },
+  { code: "070", name: "дм²" },
+  { code: "071", name: "км²" },
+  { code: "112", name: "л" },
+  { code: "113", name: "мл" },
+  { code: "120", name: "дм³" },
+  { code: "121", name: "см³" },
+  { code: "123", name: "мм³" },
+  { code: "131", name: "м³" },
+  { code: "160", name: "г" },
+  { code: "161", name: "мг" },
+  { code: "162", name: "кг" },
+  { code: "163", name: "т" },
+  { code: "166", name: "ц" },
+  { code: "170", name: "карат" },
+  { code: "206", name: "Н" },
+  { code: "208", name: "кН" },
+  { code: "222", name: "Па" },
+  { code: "223", name: "кПа" },
+  { code: "224", name: "МПа" },
+  { code: "227", name: "бар" },
+  { code: "231", name: "атм" },
+  { code: "237", name: "мм рт.ст." },
+  { code: "241", name: "мм вод.ст." },
+  { code: "250", name: "Дж" },
+  { code: "251", name: "кДж" },
+  { code: "252", name: "МДж" },
+  { code: "271", name: "Вт" },
+  { code: "272", name: "кВт" },
+  { code: "273", name: "МВт" },
+  { code: "285", name: "л.с." },
+  { code: "305", name: "°С" },
+  { code: "315", name: "А" },
+  { code: "316", name: "мА" },
+  { code: "327", name: "В" },
+  { code: "328", name: "кВ" },
+  { code: "329", name: "мВ" },
+  { code: "338", name: "Ом" },
+  { code: "341", name: "кОм" },
+  { code: "342", name: "МОм" },
+  { code: "355", name: "Гц" },
+  { code: "356", name: "кГц" },
+  { code: "357", name: "МГц" },
+  { code: "361", name: "об/мин" },
+  { code: "366", name: "Ф" },
+  { code: "367", name: "мкФ" },
+  { code: "371", name: "Гн" },
+  { code: "372", name: "мГн" },
+  { code: "505", name: "ч" },
+  { code: "506", name: "мин" },
+  { code: "507", name: "с" },
+  { code: "539", name: "дБ" },
+  { code: "565", name: "%" },
+  { code: "570", name: "‰" },
+  { code: "796", name: "шт." },
+  { code: "839", name: "комплект" },
+  { code: "868", name: "рулон" }
+];
+
+async function loadMeasurableParams() {
+  try {
+    const response = await fetch("/api/measurableparameters?equipmentId=" + currentEquipId);
+    if (!response.ok) throw new Error("Ошибка загрузки");
+    measurableParams = await response.json();
+    renderMeasurableParams();
+  } catch (error) {
+    console.error("Ошибка загрузки параметров:", error);
+    const container = document.getElementById("measurableParamsContainer");
+    if (container) container.innerHTML = '<div class="meas-error">Ошибка загрузки параметров</div>';
+  }
+}
+
+function renderMeasurableParams() {
+  const container = document.getElementById("measurableParamsContainer");
+  if (!container) return;
+
+  if (measurableParams.length === 0) {
+    container.innerHTML = `
+      <div class="meas-empty">
+        <div class="meas-empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </div>
+        <p>Замеряемые параметры не добавлены</p>
+        <button class="btn-add-param" onclick="showAddParamForm()">+ Добавить параметр</button>
+      </div>
+      <div id="measModal" class="meas-modal" style="display:none;"></div>
+    `;
+    return;
+  }
+
+  const paramsHtml = measurableParams.map(p => {
+    const measurementsHtml = (p.measurements || []).map(m => {
+      const dateStr = m.measurementDate ? m.measurementDate.substring(0, 10) : "";
+      return '<tr><td>' + dateStr + '</td><td>' + m.value + '</td><td>' + (m.note || "") + '</td><td><button class="btn-icon-sm" onclick="deleteMeasurement(' + p.id + ',' + m.id + ')" title="Удалить">✕</button></td></tr>';
+    }).join("");
+
+    const sparkId = "spark_" + p.id;
+    const lastVal = (p.measurements && p.measurements.length > 0) ? p.measurements[p.measurements.length-1].value : '—';
+    const lastDate = (p.measurements && p.measurements.length > 0) ? (p.measurements[p.measurements.length-1].measurementDate || '').substring(0,10) : '';
+    const hasData = p.measurements && p.measurements.length > 0;
+
+    return `
+      <div class="meas-param-card" id="paramCard_${p.id}">
+        <div class="meas-param-header">
+          <div class="meas-param-title">
+            <span class="meas-param-name">${p.name || "Без названия"}</span>
+            <span class="meas-param-unit">(${p.unitName || "—"})</span>
+          </div>
+          <div class="meas-param-actions">
+            <button class="btn-icon-sm" onclick="showEditParamForm(${p.id})" title="Редактировать">✎</button>
+            <button class="btn-icon-sm btn-icon-danger" onclick="deleteParam(${p.id})" title="Удалить">✕</button>
+          </div>
+        </div>
+        <div class="meas-param-info">
+          <div class="meas-info-item">
+            <span class="meas-info-label">Реф. значение</span>
+            <span class="meas-info-value">${p.referenceValue} ${p.unitName || ""}</span>
+          </div>
+          <div class="meas-info-item">
+            <span class="meas-info-label">Допуск</span>
+            <span class="meas-info-value">${p.deviationMinus > 0 ? '-' : ''}${p.deviationMinus}% ... +${p.deviationPlus}%</span>
+          </div>
+          ${hasData ? '<div class="meas-info-item"><span class="meas-info-label">Последний замер</span><span class="meas-info-value">' + lastVal + ' ' + (p.unitName||'') + ' <span class="meas-date-sub">' + lastDate + '</span></span></div>' : ''}
+        </div>
+        <div class="meas-sparkline-wrap" id="${sparkId}" onclick="openFullChart(${p.id})" title="Нажмите для полного графика"></div>
+        <div class="meas-measurements">
+          <div class="meas-measurements-header" onclick="toggleMeasurements(${p.id})" style="cursor:pointer">
+            <span class="meas-measurements-toggle">Замеры <span class="meas-toggle-arrow" id="arrow_${p.id}">▸</span></span>
+            <button class="btn-add-measurement" onclick="event.stopPropagation(); showAddMeasurementForm(${p.id})">+ Замер</button>
+          </div>
+          <div class="meas-measurements-body" id="measBody_${p.id}" style="display:none">
+            ${hasData ? `
+              <table class="meas-table">
+                <thead><tr><th>Дата</th><th>Значение</th><th>Примечание</th><th></th></tr></thead>
+                <tbody>${measurementsHtml}</tbody>
+              </table>
+            ` : '<div class="meas-no-data">Замеры не проводились</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="meas-toolbar">
+      <button class="btn-add-param" onclick="showAddParamForm()">+ Добавить параметр</button>
+    </div>
+    <div class="meas-params-grid">
+      ${paramsHtml}
+    </div>
+    <div id="measModal" class="meas-modal" style="display:none;"></div>
+    <div id="chartModal" class="meas-modal" style="display:none;"></div>
+  `;
+
+  // Draw sparklines after DOM is ready
+  measurableParams.forEach(p => drawSparkline(p));
+}
+
+function drawSparkline(param) {
+  const sparkId = "spark_" + param.id;
+  const wrap = document.getElementById(sparkId);
+  if (!wrap) return;
+
+  const measurements = param.measurements || [];
+  if (measurements.length < 2) {
+    wrap.innerHTML = '<div class="meas-chart-empty">Нет данных для графика</div>';
+    return;
+  }
+
+  const W = 200, H = 40;
+  const ref = param.referenceValue;
+  const plusLimit = ref * (1 + param.deviationPlus / 100);
+  const minusLimit = ref * (1 - param.deviationMinus / 100);
+
+  const values = measurements.map(m => m.value);
+  const allVals = [...values, ref, plusLimit, minusLimit];
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const range = maxV - minV || 1;
+
+  const scaleX = (i) => (i / Math.max(measurements.length - 1, 1)) * W;
+  const scaleY = (v) => H - ((v - minV) / range) * H;
+
+  const refY = scaleY(ref);
+  const plusY = scaleY(plusLimit);
+  const minusY = scaleY(minusLimit);
+
+  // Tolerance zone
+  const tolZone = '<rect x="0" y="'+plusY+'" width="'+W+'" height="'+(minusY - plusY)+'" fill="#fef2f2" opacity="0.5"/>';
+
+  // Reference line
+  const refLine = '<line x1="0" y1="'+refY+'" x2="'+W+'" y2="'+refY+'" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,2"/>';
+
+  // Data line
+  let pathD = '';
+  measurements.forEach((m, idx) => {
+    const x = scaleX(idx);
+    const y = scaleY(m.value);
+    pathD += (idx === 0 ? 'M' : 'L') + x + ',' + y;
+  });
+  const dataLine = '<path d="'+pathD+'" fill="none" stroke="#f97316" stroke-width="1.5"/>';
+
+  // Last point
+  const lastM = measurements[measurements.length - 1];
+  const lastX = scaleX(measurements.length - 1);
+  const lastY = scaleY(lastM.value);
+  const isOut = lastM.value > plusLimit || lastM.value < minusLimit;
+  const dotColor = isOut ? '#ef4444' : '#f97316';
+  const lastDot = '<circle cx="'+lastX+'" cy="'+lastY+'" r="3" fill="'+dotColor+'" stroke="white" stroke-width="1"/>';
+
+  wrap.innerHTML = '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block">'+tolZone+refLine+dataLine+lastDot+'</svg>';
+}
+
+function openFullChart(paramId) {
+  const param = measurableParams.find(p => p.id === paramId);
+  if (!param) return;
+
+  const measurements = param.measurements || [];
+  const modal = document.getElementById("chartModal");
+  if (!modal) return;
+
+  const ref = param.referenceValue;
+  const plusLimit = ref * (1 + param.deviationPlus / 100);
+  const minusLimit = ref * (1 - param.deviationMinus / 100);
+
+  const W = 560, H = 280;
+  const padL = 55, padR = 25, padT = 25, padB = 35;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  let svgContent = '';
+  if (measurements.length < 1) {
+    svgContent = '<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle" fill="#9ca3af" font-size="14">Нет данных</text>';
+  } else {
+    const values = measurements.map(m => m.value);
+    const allVals = [...values, ref, plusLimit, minusLimit];
+    const minV = Math.min(...allVals);
+    const maxV = Math.max(...allVals);
+    const range = maxV - minV || 1;
+
+    const scaleX = (i) => padL + (i / Math.max(measurements.length - 1, 1)) * plotW;
+    const scaleY = (v) => padT + plotH - ((v - minV) / range) * plotH;
+
+    // Grid
+    let gridLines = '';
+    const steps = 5;
+    for (let s = 0; s <= steps; s++) {
+      const v = minV + (range * s / steps);
+      const y = scaleY(v);
+      gridLines += '<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#e5e7eb" stroke-width="1"/>';
+      gridLines += '<text x="'+(padL-6)+'" y="'+(y+4)+'" text-anchor="end" fill="#9ca3af" font-size="10">'+v.toFixed(1)+'</text>';
+    }
+
+    // Date labels
+    let dateLabels = '';
+    const labelStep = Math.max(1, Math.floor(measurements.length / 8));
+    measurements.forEach((m, idx) => {
+      if (idx % labelStep === 0 || idx === measurements.length - 1) {
+        const x = scaleX(idx);
+        const dateStr = m.measurementDate ? m.measurementDate.substring(5, 10) : "";
+        dateLabels += '<text x="'+x+'" y="'+(H-8)+'" text-anchor="middle" fill="#9ca3af" font-size="9">'+dateStr+'</text>';
+      }
+    });
+
+    const refY = scaleY(ref);
+    const plusY = scaleY(plusLimit);
+    const minusY = scaleY(minusLimit);
+
+    const tolZone = '<rect x="'+padL+'" y="'+plusY+'" width="'+plotW+'" height="'+(minusY - plusY)+'" fill="#fef2f2" opacity="0.5"/>';
+    const refLine = '<line x1="'+padL+'" y1="'+refY+'" x2="'+(W-padR)+'" y2="'+refY+'" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6,3"/>';
+    const limitLines = '<line x1="'+padL+'" y1="'+plusY+'" x2="'+(W-padR)+'" y2="'+plusY+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>'
+      + '<line x1="'+padL+'" y1="'+minusY+'" x2="'+(W-padR)+'" y2="'+minusY+'" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>';
+
+    let pathD = '';
+    measurements.forEach((m, idx) => {
+      const x = scaleX(idx);
+      const y = scaleY(m.value);
+      pathD += (idx === 0 ? 'M' : 'L') + x + ',' + y;
+    });
+    const dataLine = '<path d="'+pathD+'" fill="none" stroke="#f97316" stroke-width="2"/>';
+
+    let points = '';
+    measurements.forEach((m, idx) => {
+      const x = scaleX(idx);
+      const y = scaleY(m.value);
+      const isOut = m.value > plusLimit || m.value < minusLimit;
+      const color = isOut ? '#ef4444' : '#f97316';
+      points += '<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+color+'" stroke="white" stroke-width="1.5"><title>'+m.measurementDate.substring(0,10)+': '+m.value+'</title></circle>';
+    });
+
+    svgContent = tolZone + gridLines + refLine + limitLines + dataLine + points + dateLabels;
+  }
+
+  modal.innerHTML = `
+    <div class="meas-modal-overlay" onclick="closeChartModal()"></div>
+    <div class="meas-modal-content" style="width:640px">
+      <div class="meas-modal-header">
+        <h3>${param.name || "Без названия"} (${param.unitName || "—"})</h3>
+        <button class="btn-icon-sm" onclick="closeChartModal()">✕</button>
+      </div>
+      <div style="padding:8px 0">
+        <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">${svgContent}</svg>
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;padding-top:4px;font-size:12px;color:var(--text-secondary)">
+        <span><span style="color:#22c55e">--- </span>Реф. значение: ${ref}</span>
+        <span><span style="color:#ef4444">--- </span>Допуск: -${param.deviationMinus}% / +${param.deviationPlus}%</span>
+        <span><span style="color:#f97316">● </span>Замеры</span>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function closeChartModal() {
+  const modal = document.getElementById("chartModal");
+  if (modal) modal.style.display = "none";
+}
+
+function toggleMeasurements(paramId) {
+  const body = document.getElementById("measBody_" + paramId);
+  const arrow = document.getElementById("arrow_" + paramId);
+  if (!body) return;
+  if (body.style.display === "none") {
+    body.style.display = "block";
+    if (arrow) arrow.textContent = "▾";
+  } else {
+    body.style.display = "none";
+    if (arrow) arrow.textContent = "▸";
+  }
+}
+
+function showAddParamForm() {
+  const modal = document.getElementById("measModal");
+  if (!modal) return;
+
+  const unitOptions = okeiUnits.map(u => '<option value="'+u.code+'">'+u.code + ' — ' + u.name+'</option>').join("");
+
+  modal.innerHTML = `
+    <div class="meas-modal-overlay" onclick="closeMeasModal()"></div>
+    <div class="meas-modal-content">
+      <div class="meas-modal-header">
+        <h3>Новый замеряемый параметр</h3>
+        <button class="btn-icon-sm" onclick="closeMeasModal()">✕</button>
+      </div>
+      <div class="meas-modal-body">
+        <div class="meas-form-group">
+          <label>Название</label>
+          <input type="text" id="mp_name" placeholder="Например: Температура подшипника">
+        </div>
+        <div class="meas-form-row">
+          <div class="meas-form-group">
+            <label>Референсное значение</label>
+            <input type="number" id="mp_refValue" step="0.01">
+          </div>
+          <div class="meas-form-group">
+            <label>Единица измерения (ОКЕИ)</label>
+            <select id="mp_unit">${unitOptions}</select>
+          </div>
+        </div>
+        <div class="meas-form-row">
+          <div class="meas-form-group">
+            <label>Отклонение + (%)</label>
+            <input type="number" id="mp_devPlus" step="0.1" min="0" value="5">
+          </div>
+          <div class="meas-form-group">
+            <label>Отклонение − (%)</label>
+            <input type="number" id="mp_devMinus" step="0.1" min="0" value="5">
+          </div>
+        </div>
+        <div class="meas-form-group">
+          <label>Примечание</label>
+          <input type="text" id="mp_note" placeholder="Необязательно">
+        </div>
+      </div>
+      <div class="meas-modal-footer">
+        <button class="btn-cancel" onclick="closeMeasModal()">Отмена</button>
+        <button class="btn-save" onclick="createParam()">Создать</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function showEditParamForm(paramId) {
+  const param = measurableParams.find(p => p.id === paramId);
+  if (!param) return;
+
+  const modal = document.getElementById("measModal");
+  if (!modal) return;
+
+  const unitOptions = okeiUnits.map(u => '<option value="'+u.code+'"'+(u.code===param.unitCode?' selected':'')+'>'+u.code+' — '+u.name+'</option>').join("");
+
+  modal.innerHTML = `
+    <div class="meas-modal-overlay" onclick="closeMeasModal()"></div>
+    <div class="meas-modal-content">
+      <div class="meas-modal-header">
+        <h3>Редактирование параметра</h3>
+        <button class="btn-icon-sm" onclick="closeMeasModal()">✕</button>
+      </div>
+      <div class="meas-modal-body">
+        <div class="meas-form-group">
+          <label>Название</label>
+          <input type="text" id="mp_name" value="${param.name || ''}">
+        </div>
+        <div class="meas-form-row">
+          <div class="meas-form-group">
+            <label>Референсное значение</label>
+            <input type="number" id="mp_refValue" step="0.01" value="${param.referenceValue}">
+          </div>
+          <div class="meas-form-group">
+            <label>Единица измерения (ОКЕИ)</label>
+            <select id="mp_unit">${unitOptions}</select>
+          </div>
+        </div>
+        <div class="meas-form-row">
+          <div class="meas-form-group">
+            <label>Отклонение + (%)</label>
+            <input type="number" id="mp_devPlus" step="0.1" min="0" value="${param.deviationPlus}">
+          </div>
+          <div class="meas-form-group">
+            <label>Отклонение − (%)</label>
+            <input type="number" id="mp_devMinus" step="0.1" min="0" value="${param.deviationMinus}">
+          </div>
+        </div>
+        <div class="meas-form-group">
+          <label>Примечание</label>
+          <input type="text" id="mp_note" value="${param.note || ''}">
+        </div>
+      </div>
+      <div class="meas-modal-footer">
+        <button class="btn-cancel" onclick="closeMeasModal()">Отмена</button>
+        <button class="btn-save" onclick="updateParam(${paramId})">Сохранить</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function showAddMeasurementForm(paramId) {
+  const param = measurableParams.find(p => p.id === paramId);
+  if (!param) return;
+
+  const modal = document.getElementById("measModal");
+  if (!modal) return;
+
+  const today = new Date().toISOString().substring(0, 10);
+
+  modal.innerHTML = `
+    <div class="meas-modal-overlay" onclick="closeMeasModal()"></div>
+    <div class="meas-modal-content">
+      <div class="meas-modal-header">
+        <h3>Новый замер — ${param.name || "Параметр"}</h3>
+        <button class="btn-icon-sm" onclick="closeMeasModal()">✕</button>
+      </div>
+      <div class="meas-modal-body">
+        <div class="meas-form-row">
+          <div class="meas-form-group">
+            <label>Дата замера</label>
+            <input type="date" id="mm_date" value="${today}">
+          </div>
+          <div class="meas-form-group">
+            <label>Значение (${param.unitName || ""})</label>
+            <input type="number" id="mm_value" step="0.01" value="${param.referenceValue}">
+          </div>
+        </div>
+        <div class="meas-form-group">
+          <label>Примечание</label>
+          <input type="text" id="mm_note" placeholder="Необязательно">
+        </div>
+      </div>
+      <div class="meas-modal-footer">
+        <button class="btn-cancel" onclick="closeMeasModal()">Отмена</button>
+        <button class="btn-save" onclick="createMeasurement(${paramId})">Записать</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function closeMeasModal() {
+  const modal = document.getElementById("measModal");
+  if (modal) modal.style.display = "none";
+}
+
+async function createParam() {
+  const name = document.getElementById("mp_name").value;
+  const refValue = parseFloat(document.getElementById("mp_refValue").value) || 0;
+  const unitSel = document.getElementById("mp_unit");
+  const unitCode = unitSel.value;
+  const unitName = unitSel.options[unitSel.selectedIndex].text.split(" — ")[1] || "";
+  const devPlus = parseFloat(document.getElementById("mp_devPlus").value) || 0;
+  const devMinus = parseFloat(document.getElementById("mp_devMinus").value) || 0;
+  const note = document.getElementById("mp_note").value;
+
+  try {
+    const response = await fetch("/api/measurableparameters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        equipmentId: currentEquipId,
+        name, referenceValue: refValue, unitCode, unitName,
+        deviationPlus: devPlus, deviationMinus: devMinus, note
+      })
+    });
+    if (!response.ok) throw new Error("Ошибка создания");
+    closeMeasModal();
+    loadMeasurableParams();
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  }
+}
+
+async function updateParam(paramId) {
+  const name = document.getElementById("mp_name").value;
+  const refValue = parseFloat(document.getElementById("mp_refValue").value) || 0;
+  const unitSel = document.getElementById("mp_unit");
+  const unitCode = unitSel.value;
+  const unitName = unitSel.options[unitSel.selectedIndex].text.split(" — ")[1] || "";
+  const devPlus = parseFloat(document.getElementById("mp_devPlus").value) || 0;
+  const devMinus = parseFloat(document.getElementById("mp_devMinus").value) || 0;
+  const note = document.getElementById("mp_note").value;
+
+  try {
+    const response = await fetch("/api/measurableparameters/" + paramId, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name, referenceValue: refValue, unitCode, unitName,
+        deviationPlus: devPlus, deviationMinus: devMinus, note
+      })
+    });
+    if (!response.ok) throw new Error("Ошибка обновления");
+    closeMeasModal();
+    loadMeasurableParams();
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  }
+}
+
+async function deleteParam(paramId) {
+  if (!confirm("Удалить параметр и все его замеры?")) return;
+  try {
+    const response = await fetch("/api/measurableparameters/" + paramId, { method: "DELETE" });
+    if (!response.ok) throw new Error("Ошибка удаления");
+    loadMeasurableParams();
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  }
+}
+
+async function createMeasurement(paramId) {
+  const date = document.getElementById("mm_date").value;
+  const value = parseFloat(document.getElementById("mm_value").value);
+  const note = document.getElementById("mm_note").value;
+
+  if (!date) { alert("Укажите дату"); return; }
+  if (isNaN(value)) { alert("Укажите значение"); return; }
+
+  try {
+    const response = await fetch("/api/measurableparameters/" + paramId + "/measurements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ measurementDate: date, value, note })
+    });
+    if (!response.ok) throw new Error("Ошибка создания замера");
+    closeMeasModal();
+    loadMeasurableParams();
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  }
+}
+
+async function deleteMeasurement(paramId, measurementId) {
+  if (!confirm("Удалить замер?")) return;
+  try {
+    const response = await fetch("/api/measurableparameters/measurements/" + measurementId, { method: "DELETE" });
+    if (!response.ok) throw new Error("Ошибка удаления");
+    loadMeasurableParams();
+  } catch (error) {
+    alert("Ошибка: " + error.message);
+  }
 }
 
 function onEquipFieldChange(key, value) {
