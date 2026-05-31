@@ -1,0 +1,6 @@
+@TOIR.Web_HostAddress = http://localhost:5134
+
+GET {{TOIR.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

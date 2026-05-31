@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TOIR.Core/TOIR.Core.csproj" />
+    <Project Path="src/TOIR.Web/TOIR.Web.csproj" />
+  </Folder>
+</Solution>
