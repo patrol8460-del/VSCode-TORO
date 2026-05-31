@@ -27,12 +27,17 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Needs.AddRange(
-        new TOIR.Core.Models.Needs { Id = 1, Status = "Согласовано", PurchaseGroup = "Электротехника", OZM = "ОЗМ-001" },
-        new TOIR.Core.Models.Needs { Id = 2, Status = "На рассмотрении", PurchaseGroup = "Трубопровод", OZM = "ОЗМ-002" },
-        new TOIR.Core.Models.Needs { Id = 3, Status = "Согласовано", PurchaseGroup = "Металлоконструкции", OZM = "ОЗМ-003" },
-        new TOIR.Core.Models.Needs { Id = 4, Status = "Отклонено", PurchaseGroup = "Электротехника", OZM = "ОЗМ-004" },
-        new TOIR.Core.Models.Needs { Id = 5, Status = "Согласовано", PurchaseGroup = "Кабельная продукция", OZM = "ОЗМ-005" }
+    db.Equipments.AddRange(
+        new TOIR.Core.Equipment { Tip_model = "HySTAT-A1000Q/60/10", Status_oborudovaniya = "Демонтаж", Ceh = "31", MVZ = "U130020101" },
+        new TOIR.Core.Equipment { Tip_model = "0,35 ТС-1300мм", Status_oborudovaniya = "Консервация", Ceh = "39", MVZ = "U130021301" },
+        new TOIR.Core.Equipment { Tip_model = "0,5-1К-4,5-5,1-6", Status_oborudovaniya = "Монтаж", Ceh = "42", MVZ = "U130021302" },
+        new TOIR.Core.Equipment { Tip_model = "0,68 ТС-1500", Status_oborudovaniya = "Не эксплуатируется", Ceh = "48", MVZ = "U130021311" },
+        new TOIR.Core.Equipment { Tip_model = "00 686 006 42ТХ", Status_oborudovaniya = "Списано", Ceh = "50", MVZ = "U130021321" },
+        new TOIR.Core.Equipment { Tip_model = "05WM16", Status_oborudovaniya = "Эксплуатируется", Ceh = "52", MVZ = "U130021331" },
+        new TOIR.Core.Equipment { Tip_model = "07-189А.00187-ТХ", Ceh = "55", MVZ = "U130021341" },
+        new TOIR.Core.Equipment { Tip_model = "07-274.00155-ТХ", Ceh = "56", MVZ = "U130023902" },
+        new TOIR.Core.Equipment { Tip_model = "07-274Д.00020 (+6.0)", Ceh = "57", MVZ = "U130023921" },
+        new TOIR.Core.Equipment { Tip_model = "07-274Д.00020-ТХ1", Ceh = "58", MVZ = "U130024211" }
     );
     db.SaveChanges();
 }
